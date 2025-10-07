@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Razas de Perros 🐶</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --color-primary: #ff7e5f;
+            --color-secondary: #feb47b; 
+            --color-text: #333;
+            --color-bg: #fdf6ec;
+            --color-card-bg: #fff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+        }
+        
+        .container {
+            background: var(--color-card-bg);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--color-primary);
+            font-weight: 700;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        /* Buscador y Directorio */
+        .controls {
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .search-group, .select-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+            justify-content: center;
+        }
+
+        /* Separador visual */
+        .separator {
+            font-weight: 600;
+            color: #aaa;
+            margin: 10px 0;
+        }
+        
+        input, select {
+            padding: 12px 18px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            flex-grow: 1;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(255, 126, 95, 0.2);
+        }
+
+        select {
+            appearance: none; 
+            background-color: white;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ff7e5f%22%20d%3D%22M287%20177.3l-131%20131c-4%204-9.2%206.2-14.7%206.2s-10.7-2.2-14.7-6.2L5.4%20177.3c-8-8-8-20.9%200-28.9s20.9-8%2028.9%200l110.4%20110.4%20110.4-110.4c8-8%2020.9-8%2028.9%200s8%2020.9%200%2028.9z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 10px;
+            cursor: pointer;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 126, 95, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 126, 95, 0.6);
+        }
+        
+        button:disabled {
+            background-image: none;
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Tarjeta del Perro  */
+        .dog-card {
+            background-color: var(--color-card-bg);
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 30px;
+            display: inline-block;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+            transform: rotate(-2deg); 
+            border: 10px solid white; 
+            max-width: 450px; 
+        }
+
+        .dog-card:hover {
+            transform: rotate(0deg) scale(1.03); 
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dog-image {
+            width: 100%;
+            height: 300px; 
+            object-fit: cover; 
+            border-radius: 5px;
+            display: block;
+            margin-bottom: 15px;
+        }
+        
+        .dog-info {
+            padding: 10px 5px 0;
+            text-align: left;
+        }
+        
+        .dog-info h2 {
+            color: var(--color-primary);
+            text-transform: capitalize;
+            margin: 0 0 10px;
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .dog-info p {
+            margin: 5px 0;
+            font-size: 1.0em;
+            color: #666;
+        }
+
+        .dog-info strong {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        /* Mensajes  */
+        .error {
+            color: #d9534f;
+            padding: 15px;
+            background-color: #fcebeb;
+            border: 1px solid #f9caca;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.1em;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>Directorio y Buscador de Razas de Perros 🐕</h1>
+            
+            <div class="controls">
+                
+                <div class="search-group">
+                    <input 
+                        v-model="searchTerm" 
+                        @keyup.enter="searchDogByTerm"
+                        placeholder="Escribe el nombre de la raza..."
+                        :disabled="loadingDetails"
+                    />
+                    <button @click="searchDogByTerm" :disabled="loadingDetails || !searchTerm.trim()">
+                        {{ loadingDetails && currentSearchType === 'term' ? 'Buscando...' : 'Buscar 🔎' }}
+                    </button>
+                </div>
+
+                <div class="separator">— O selecciona de la lista —</div>
+
+                <div class="select-group">
+                    <select 
+                        v-model="selectedBreedId" 
+                        @change="searchDogById"
+                        :disabled="loadingBreeds || loadingDetails"
+                    >
+                        <option value="" disabled>{{ loadingBreeds ? 'Cargando directorio...' : 'Selecciona una raza...' }}</option>
+                        <option v-for="breed in breedsList" :key="breed.id" :value="breed.id">
+                            {{ breed.name }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            
+            <div v-if="loadingBreeds || loadingDetails" class="loading">
+                Cargando información...
+            </div>
+            
+            <div v-if="error" class="error">
+                {{ error }}
+            </div>
+            
+            <div v-if="dog && !loadingDetails" class="dog-card">
+                <img 
+                    :src="dog.image" 
+                    :alt="dog.breedName"
+                    class="dog-image"
+                />
+                
+                <div class="dog-info">
+                    <h2>{{ dog.breedName }}</h2>
+                    <p v-if="dog.group"><strong>Grupo:</strong> {{ dog.group }}</p>
+                    <p v-if="dog.temperament"><strong>Temperamento:</strong> {{ dog.temperament }}</p>
+                    <p v-if="dog.lifespan"><strong>Esperanza de Vida:</strong> {{ dog.lifespan }}</p>
+                    <p v-if="dog.weight"><strong>Peso (imperial):</strong> {{ dog.weight }}</p>
+                    <p v-if="dog.height"><strong>Altura (imperial):</strong> {{ dog.height }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    breedsList: [], 
+                    selectedBreedId: '',
+                    searchTerm: '', 
+                    dog: null,
+                    loadingBreeds: true, 
+                    loadingDetails: false, 
+                    currentSearchType: null, 
+                    error: null
+                }
+            },
+            methods: {
+                // Función de Carga Inicial
+                async fetchBreeds() {
+                    this.loadingBreeds = true;
+                    this.error = null;
+                    try {
+                        const response = await fetch(`https://api.thedogapi.com/v1/breeds`);
+                        if (!response.ok) throw new Error('No se pudo cargar el directorio de razas.');
+
+                        const data = await response.json();
+                        // Almacenamos el objeto completo de la raza, incluyendo el ID
+                        this.breedsList = data.sort((a, b) => a.name.localeCompare(b.name)); 
+                        
+                        // Busca un ID inicial (ej: Husky) o el primero para mostrar algo al inicio
+                        const defaultBreed = this.breedsList.find(b => b.name === 'Husky');
+                        if (defaultBreed) {
+                            this.selectedBreedId = defaultBreed.id;
+                            this.searchDogById(defaultBreed.id);
+                        } else if (this.breedsList.length > 0) {
+                            this.selectedBreedId = this.breedsList[0].id;
+                            this.searchDogById(this.breedsList[0].id);
+                        }
+                        
+                    } catch (err) {
+                        this.error = `Error al cargar el directorio: ${err.message}`;
+                    } finally {
+                        this.loadingBreeds = false;
+                    }
+                },
+
+                // Lógica de búsqueda general por ID de raza (usado por el select y la búsqueda por texto)
+                async searchDogDetails(breedInfo) {
+                    this.loadingDetails = true;
+                    this.error = null;
+                    this.dog = null;
+                    
+                    try {
+                        // 1. Obtener la imagen de la raza
+                        const imageResponse = await fetch(`https://api.thedogapi.com/v1/images/search?breed_id=${breedInfo.id}`);
+
+                        if (!imageResponse.ok) throw new Error('No se pudo obtener la imagen de la raza.');
+                        
+                        const imageData = await imageResponse.json();
+                        const imageUrl = imageData.length > 0 ? imageData[0].url : 'https://via.placeholder.com/400?text=Imagen+no+disponible';
+
+                        // Mapeamos los datos de la API
+                        this.dog = {
+                            breedName: breedInfo.name,
+                            image: imageUrl,
+                            group: breedInfo.breed_group,
+                            temperament: breedInfo.temperament,
+                            lifespan: breedInfo.life_span,
+                            weight: breedInfo.weight ? breedInfo.weight.imperial : 'N/A',
+                            height: breedInfo.height ? breedInfo.height.imperial : 'N/A'
+                        };
+                        
+                    } catch (err) {
+                        this.error = `Error al cargar los detalles: ${err.message}`;
+                    } finally {
+                        this.loadingDetails = false;
+                        this.currentSearchType = null;
+                    }
+                },
+                
+                // --- Método para el Directorio (SELECT) ---
+                searchDogById() {
+                    this.currentSearchType = 'id';
+                    if (!this.selectedBreedId) return;
+
+                    const breed = this.breedsList.find(b => b.id === this.selectedBreedId);
+                    if (breed) {
+                        this.searchDogDetails(breed);
+                        // Limpiamos el campo de texto para que no confunda
+                        this.searchTerm = breed.name;
+                    }
+                },
+
+                // --- Método para el Buscador de Texto (INPUT) ---
+                async searchDogByTerm() {
+                    if (!this.searchTerm.trim()) {
+                        this.error = 'Por favor, ingresa el nombre de una raza.';
+                        return;
+                    }
+
+                    this.currentSearchType = 'term';
+                    this.loadingDetails = true;
+                    this.error = null;
+                    this.dog = null;
+                    
+                    const normalizedTerm = this.searchTerm.toLowerCase().trim();
+                    
+                    try {
+                        // Usamos el endpoint de búsqueda para encontrar el ID
+                        const searchResponse = await fetch(`https://api.thedogapi.com/v1/breeds/search?q=${normalizedTerm}`);
+                        
+                        if (!searchResponse.ok) throw new Error('No se pudo conectar con la API de búsqueda.');
+
+                        const searchData = await searchResponse.json();
+                        
+                        if (searchData.length === 0) {
+                            throw new Error(`Raza '${this.searchTerm}' no encontrada.`);
+                        }
+                        
+                        const breedInfo = searchData[0]; 
+                        
+                        // Si la encontramos, actualizamos el selector y buscamos los detalles
+                        this.selectedBreedId = breedInfo.id;
+                        this.searchDogDetails(breedInfo); 
+
+                    } catch (err) {
+                        this.error = `Error: ${err.message}`;
+                        this.loadingDetails = false;
+                        this.currentSearchType = null;
+                    }
+                }
+            },
+            
+            mounted() {
+                this.fetchBreeds();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
